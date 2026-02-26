@@ -600,6 +600,7 @@ async fn lock_and_sync(
             DryRun::Disabled,
             printer,
             preview,
+            true,
         )
         .await?
         .into_environment()?;

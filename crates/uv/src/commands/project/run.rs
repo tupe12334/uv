@@ -498,6 +498,7 @@ hint: If you are running a script with `{}` in the shebang, you may need to incl
                     false,
                     false,
                     false,
+                    false,
                 )?;
 
                 Some(environment.into_interpreter())
@@ -711,6 +712,7 @@ hint: If you are running a script with `{}` in the shebang, you may need to incl
                     uv_virtualenv::OnExisting::Remove(
                         uv_virtualenv::RemovalReason::TemporaryEnvironment,
                     ),
+                    false,
                     false,
                     false,
                     false,
@@ -951,6 +953,7 @@ hint: If you are running a script with `{}` in the shebang, you may need to incl
                     false,
                     false,
                     false,
+                    false,
                 )?;
                 venv.into_interpreter()
             } else {
@@ -1076,6 +1079,7 @@ hint: If you are running a script with `{}` in the shebang, you may need to incl
                 uv_virtualenv::OnExisting::Remove(
                     uv_virtualenv::RemovalReason::TemporaryEnvironment,
                 ),
+                false,
                 false,
                 false,
                 false,

@@ -1557,6 +1557,7 @@ impl ProjectEnvironment {
                         false,
                         false,
                         upgradeable,
+                        false,
                     )?;
                     return Ok(if replace {
                         Self::WouldReplace(root, environment, temp_dir)
@@ -1605,6 +1606,7 @@ impl ProjectEnvironment {
                     false,
                     false,
                     upgradeable,
+                    centralized,
                 )?
                 .with_centralized(centralized);
 
@@ -1760,6 +1762,7 @@ impl ScriptEnvironment {
                         false,
                         false,
                         upgradeable,
+                        false,
                     )?;
                     return Ok(if root.exists() {
                         Self::WouldReplace(root, environment, temp_dir)
@@ -1801,6 +1804,7 @@ impl ScriptEnvironment {
                     false,
                     false,
                     upgradeable,
+                    false,
                 )?;
 
                 Ok(if replaced {

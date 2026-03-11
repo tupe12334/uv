@@ -1,12 +1,14 @@
 use std::hint::black_box;
 use std::str::FromStr;
 
+use clap::Parser;
 use criterion::{Criterion, criterion_group, criterion_main, measurement::WallTime};
 use uv_cache::Cache;
+use uv_cli::Cli;
 use uv_client::{BaseClientBuilder, Connectivity, RegistryClientBuilder};
 use uv_distribution_types::Requirement;
 use uv_python::PythonEnvironment;
-use uv_resolver::Manifest;
+use uv_resolver::{Lock, Manifest};
 
 fn resolve_warm_jupyter(c: &mut Criterion<WallTime>) {
     let manifest = Manifest::simple(vec![Requirement::from(
@@ -47,18 +49,79 @@ fn resolve_warm_airflow(c: &mut Criterion<WallTime>) {
 //     c.bench_function("resolve_warm_airflow_universal", |b| b.iter(&run));
 // }
 
+/// Benchmark `uv run python -V` in the airflow workspace with a satisfied lockfile.
+fn run_noop_airflow(c: &mut Criterion<WallTime>) {
+    let airflow_dir = std::path::absolute("../../airflow").unwrap();
+    if !airflow_dir.join("uv.lock").exists() {
+        return;
+    }
+    let cache_dir = std::path::absolute("../../.cache").unwrap();
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
+    let airflow_dir = airflow_dir.to_string_lossy().to_string();
+    let cache_dir = cache_dir.to_string_lossy().to_string();
+
+    // Verify the setup works before benchmarking.
+    let cli = Cli::try_parse_from([
+        "uv",
+        "run",
+        "--directory",
+        &airflow_dir,
+        "--cache-dir",
+        &cache_dir,
+        "--no-sync",
+        "--quiet",
+        "python",
+        "-V",
+    ])
+    .unwrap();
+    runtime.block_on(uv::run(cli)).unwrap();
+
+    c.bench_function("run_noop_airflow", |b| {
+        b.iter(|| {
+            let cli = Cli::try_parse_from([
+                "uv",
+                "run",
+                "--directory",
+                black_box(&airflow_dir),
+                "--cache-dir",
+                black_box(&cache_dir),
+                "--no-sync",
+                "--quiet",
+                "python",
+                "-V",
+            ])
+            .unwrap();
+            runtime.block_on(uv::run(cli)).unwrap();
+        });
+    });
+}
+
+/// Benchmark lock file parsing for the airflow workspace (891 packages).
+fn parse_airflow_lockfile(c: &mut Criterion<WallTime>) {
+    let lockfile = include_str!("../inputs/airflow.uv.lock");
+
+    c.bench_function("parse_airflow_lockfile", |b| {
+        b.iter(|| toml::from_str::<Lock>(black_box(lockfile)).unwrap());
+    });
+}
+
 criterion_group!(
     uv,
     resolve_warm_jupyter,
     resolve_warm_jupyter_universal,
-    resolve_warm_airflow
+    resolve_warm_airflow,
+    run_noop_airflow,
+    parse_airflow_lockfile,
 );
 criterion_main!(uv);
 
 fn setup(manifest: Manifest, universal: bool) -> impl Fn() {
     let runtime = tokio::runtime::Builder::new_current_thread()
-        // CodSpeed limits the total number of threads to 500
-        .max_blocking_threads(256)
         .enable_all()
         .build()
         .unwrap();

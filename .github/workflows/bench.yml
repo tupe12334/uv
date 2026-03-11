@@ -47,11 +47,21 @@ jobs:
           cargo run --bin uv -- pip compile test/requirements/jupyter.in --universal --exclude-newer 2024-08-08 --cache-dir .cache
           cargo run --bin uv -- pip compile test/requirements/airflow.in --universal --exclude-newer 2024-08-08 --cache-dir .cache
 
+      - name: "Clone airflow workspace"
+        run: |
+          git init airflow
+          git -C airflow remote add origin https://github.com/apache/airflow.git
+          git -C airflow fetch --depth 1 origin 0027d171d908908692f16755a77bc2e4dea42a25
+          git -C airflow checkout FETCH_HEAD
+
+      - name: "Copy airflow lock file"
+        run: cp crates/uv-bench/inputs/airflow.uv.lock airflow/uv.lock
+
       - name: "Build benchmarks"
         run: cargo codspeed build -m walltime --profile profiling -p uv-bench
 
       - name: "Create artifact archive"
-        run: tar -cvf benchmarks-walltime.tar target/codspeed target/debug/uv .cache
+        run: tar -cvf benchmarks-walltime.tar target/codspeed target/debug/uv .cache airflow
 
       - name: "Upload benchmark artifacts"
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -124,6 +134,16 @@ jobs:
           cargo run --bin uv -- venv --cache-dir .cache
           cargo run --bin uv -- pip compile test/requirements/jupyter.in --universal --exclude-newer 2024-08-08 --cache-dir .cache
           cargo run --bin uv -- pip compile test/requirements/airflow.in --universal --exclude-newer 2024-08-08 --cache-dir .cache
+
+      - name: "Clone airflow workspace"
+        run: |
+          git init airflow
+          git -C airflow remote add origin https://github.com/apache/airflow.git
+          git -C airflow fetch --depth 1 origin 0027d171d908908692f16755a77bc2e4dea42a25
+          git -C airflow checkout FETCH_HEAD
+
+      - name: "Copy airflow lock file"
+        run: cp crates/uv-bench/inputs/airflow.uv.lock airflow/uv.lock
 
       - name: "Build benchmarks"
         run: cargo codspeed build --profile profiling -p uv-bench

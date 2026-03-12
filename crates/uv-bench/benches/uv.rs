@@ -122,6 +122,8 @@ criterion_main!(uv);
 
 fn setup(manifest: Manifest, universal: bool) -> impl Fn() {
     let runtime = tokio::runtime::Builder::new_current_thread()
+        // CodSpeed limits the total number of threads to 500
+        .max_blocking_threads(256)
         .enable_all()
         .build()
         .unwrap();

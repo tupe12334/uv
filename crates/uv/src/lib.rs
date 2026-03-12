@@ -404,9 +404,9 @@ pub async fn run(mut cli: Cli) -> Result<ExitStatus> {
     // `run()` to be called multiple times (e.g., in benchmarks) without failing.
     static INITIALIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     if !INITIALIZED.swap(true, Ordering::SeqCst) {
-        // Set the global flags.
-        uv_flags::init(EnvironmentFlags::from(&environment))
-            .map_err(|()| anyhow::anyhow!("Flags are already initialized"))?;
+        // Set the global flags. Ignore the error if they were already initialized
+        // (e.g., by `uv_flags::contains()` during resolver benchmarks).
+        let _ = uv_flags::init(EnvironmentFlags::from(&environment));
 
         // Configure the `tracing` crate, which controls internal logging.
         #[cfg(feature = "tracing-durations-export")]

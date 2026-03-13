@@ -652,6 +652,35 @@ jobs:
           .\uv.exe pip install --extra-index-url=$env:PYODIDE_INDEX --no-build numpy
           python -c 'import numpy'
 
+  # The Chainguard distroless Python image only ships the Python interpreter —
+  # no shell, no pip, no `which`. This means the standard `check_system_python.py`
+  # script (used by the `chainguard-dev` system test) cannot be reused here.
+  # Instead, we run a dedicated Python script that validates uv directly.
+  integration-test-chainguard:
+    name: "chainguard distroless"
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: "Download binary"
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: uv-linux-libc-${{ inputs.sha }}
+
+      - name: "Prepare binary"
+        run: chmod +x ./uv
+
+      - name: "Validate distroless Python install"
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/uv:/uv:ro" \
+            -v "${{ github.workspace }}/test/integration/chainguard.py:/chainguard.py:ro" \
+            cgr.dev/chainguard/python:latest@sha256:c789723622cfc4a6b5d604a59250e3f708d0b4bb64cabb39a17c47119a224179 \
+            /chainguard.py
+
   integration-test-termux:
     name: "termux on android"
     timeout-minutes: 15

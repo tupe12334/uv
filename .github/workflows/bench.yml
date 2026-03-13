@@ -57,6 +57,9 @@ jobs:
       - name: "Copy airflow lock file"
         run: cp crates/uv-bench/inputs/airflow.uv.lock airflow/uv.lock
 
+      - name: "Create airflow venv"
+        run: cargo run --bin uv -- venv airflow/.venv --cache-dir .cache
+
       - name: "Build benchmarks"
         run: cargo codspeed build -m walltime --profile profiling -p uv-bench
 
@@ -144,6 +147,9 @@ jobs:
 
       - name: "Copy airflow lock file"
         run: cp crates/uv-bench/inputs/airflow.uv.lock airflow/uv.lock
+
+      - name: "Create airflow venv"
+        run: cargo run --bin uv -- venv airflow/.venv --cache-dir .cache
 
       - name: "Build benchmarks"
         run: cargo codspeed build --profile profiling -p uv-bench

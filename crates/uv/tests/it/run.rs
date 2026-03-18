@@ -6809,7 +6809,7 @@ fn run_centralized_env() -> Result<()> {
 
     ----- stderr -----
     Using CPython 3.12.[X] interpreter at: [PYTHON-3.12]
-    Creating virtual environment in the centralized store
+    Creating virtual environment `project-[HASH]` in the centralized store
     Resolved 1 package in [TIME]
     Checked in [TIME]
     ");
